@@ -21,6 +21,8 @@
 const double M_PI = 3.14159265358979323846;
 #endif
 
+
+
 /**
  * Struct representing one position/control measurement.
  */
@@ -47,6 +49,24 @@ struct LandmarkObs {
   double x;   // Local (vehicle coords) x position of landmark observation [m]
   double y;   // Local (vehicle coords) y position of landmark observation [m]
 };
+
+inline double multiv_prob(double sig_x, double sig_y, double x_obs, double y_obs,
+                   double mu_x, double mu_y) {
+  // calculate normalization term
+  double gauss_norm;
+  gauss_norm = 1 / (2 * M_PI * sig_x * sig_y);
+
+  // calculate exponent
+  double exponent;
+  exponent = (pow(x_obs - mu_x, 2) / (2 * pow(sig_x, 2)))
+               + (pow(y_obs - mu_y, 2) / (2 * pow(sig_y, 2)));
+    
+  // calculate weight using normalization terms and exponent
+  double weight;
+  weight = gauss_norm * exp(-exponent);
+    
+  return weight;
+}
 
 /**
  * Computes the Euclidean distance between two 2D points.
@@ -247,5 +267,7 @@ inline bool read_landmark_data(std::string filename,
   }
   return true;
 }
+
+
 
 #endif  // HELPER_FUNCTIONS_H_

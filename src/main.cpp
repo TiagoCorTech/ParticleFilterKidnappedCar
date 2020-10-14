@@ -26,6 +26,9 @@ string hasData(string s) {
 }
 
 int main() {
+  
+  std::cout << "Main" << std::endl;
+  
   uWS::Hub h;
 
   // Set up parameters here
@@ -50,6 +53,8 @@ int main() {
   h.onMessage([&pf,&map,&delta_t,&sensor_range,&sigma_pos,&sigma_landmark]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                uWS::OpCode opCode) {
+                
+    //std::cout << "On Mesagge: " << std::endl;
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -62,17 +67,21 @@ int main() {
         string event = j[0].get<string>();
         
         if (event == "telemetry") {
+          //std::cout << "Telemetry :" << std::endl;
           // j[1] is the data JSON object
           if (!pf.initialized()) {
+            //std::cout << "Initializing :" << std::endl;
             // Sense noisy position data from the simulator
             double sense_x = std::stod(j[1]["sense_x"].get<string>());
             double sense_y = std::stod(j[1]["sense_y"].get<string>());
             double sense_theta = std::stod(j[1]["sense_theta"].get<string>());
-			
+            
+			//std::cout << "Before Function :" << std::endl;
             pf.init(sense_x, sense_y, sense_theta, sigma_pos);
           } else {
             // Predict the vehicle's next state from previous 
             //   (noiseless control) data.
+            //std::cout << "Predicting :" << std::endl;
             double previous_velocity = std::stod(j[1]["previous_velocity"].get<string>());
             double previous_yawrate = std::stod(j[1]["previous_yawrate"].get<string>());
 
@@ -98,8 +107,9 @@ int main() {
           std::copy(std::istream_iterator<float>(iss_y),
           std::istream_iterator<float>(),
           std::back_inserter(y_sense));
-
-          for (int i = 0; i < x_sense.size(); ++i) {
+			
+          int nSense =  x_sense.size();
+          for (int i = 0; i < nSense ; ++i) {
             LandmarkObs obs;
             obs.x = x_sense[i];
             obs.y = y_sense[i];
@@ -143,7 +153,7 @@ int main() {
           auto msg = "42[\"best_particle\"," + msgJson.dump() + "]";
           // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-          */
+          
         }  // end "telemetry" if
       } else {
         string msg = "42[\"manual\",{}]";
