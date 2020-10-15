@@ -135,9 +135,12 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   during the updateWeights phase.
    */
   		
+  	
+    int nPredicted = predicted.size();
+    std::cout<<"In Data assoc : "<< nPredicted <<std::endl;
   
     //Para cada observacion:
-    for (int p = 0; p < this->num_particles; p++){
+    for (int p = 0; p < nPredicted ; p++){
         //Busque el landmark mas cercano:
         double distanciaMinima = 1000000, distancia;
       
@@ -151,6 +154,7 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
               predicted[p].id = map_landmarks.landmark_list[l].id_i;
             }
         }
+        std::cout<<"Observation : "<< predicted[p].id <<std::endl;
     }
 }
 
@@ -170,14 +174,18 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-  
+  std::cout<<"updateWeights"<<std::endl;
+  std::cout<<"num_particles: "<<num_particles<<std::endl;
   double theta = -M_PI/2; 
+  
   for(int p = 0; p < num_particles; p++){
-    
+    std::cout<<"Particle  : "<<p<<std::endl;
     
     //Transformo:
     vector<LandmarkObs> obsTransformed;
     int nObservations = observations.size();
+    std::cout<<"Particle : "<<p<<std::endl;
+    std::cout<<"Observations : "<<nObservations<<std::endl;
     for(int o = 0; o < nObservations; o++){
       double x_obs, y_obs;
       LandmarkObs obs;
@@ -194,15 +202,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     
     
+    
+    
     //Asocio::
    // std::vector<single_landmark_s> mLandmark_list;
     
     //mLandmark_list = Map->landmark_list;
-    
+    std::cout<<"dataAssociation : "<<std::endl;
     this->dataAssociation( obsTransformed , map_landmarks );
     
-    
-    
+  
     //Saco el peso de cada una:
     for(int o = 0; o < nObservations; o++){
     	//LandmarkObs aLandmark;
@@ -215,8 +224,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
               
             }
         }   
-    }  
+    }
+    std::cout<<"Particle Weight : "<<particles[p].weight<<std::endl;
+    
   }
+  std::cout<<"End Updating... "<<std::endl;
 }
 
 void ParticleFilter::resample() {
@@ -226,8 +238,9 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
-  
+  std::cout<<"Init Resampling... "<< weights.size() << std::endl;
   std::default_random_engine generator;
+  weights.clear();
   
   double totalW = 0;
   //Calculo la suma:
@@ -236,24 +249,30 @@ void ParticleFilter::resample() {
   }
   //Normalizo:
   for(int p = 0; p < num_particles; p++){
-    weights[p] = particles[p].weight / totalW; 
+    weights.push_back( particles[p].weight / totalW );
   }
   
+  std::cout<<"Before Distributions...Num Particles "<< num_particles << std::endl;
   //std::discrete_distribution<int> distribution;
   std::discrete_distribution<int> distribution(weights.begin(), weights.end());
   std::vector<Particle> newParticles;
   
+  int number = 0;
+  std::cout<<"Before Loop, Weights Size: "<<  weights.size()  <<std::endl;
   for(int p = 0; p < num_particles; p++){
     
-    int number = distribution(generator);
-       
+    std::cout<<"Loop... "<<p<<std::endl;
+    number = distribution(generator);
+    std::cout<<"Mid Loop... "<<number<<std::endl;
     newParticles.push_back(particles[number]);
-    
-    
+        
   }
+  
+  std::cout<<"Before New Particle... "<< newParticles.size()<<std::endl;
   
   particles = newParticles;
   
+  std::cout<<"End Resampling... "<<std::endl;
 }
 
 void ParticleFilter::SetAssociations(Particle& particle, 
